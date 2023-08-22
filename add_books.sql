@@ -22,11 +22,11 @@ BEGIN
     genre := '&Genre';
     Age_Group:= '&Age_Group';
     total_book := &Total;
-    SELECT MAX(BOOK_id) + 1 INTO book_id FROM books;
+    SELECT MAX(BOOK_id) + 1 INTO book_id FROM books@site_link;
     IF BOOK_id IS NULL THEN
         BOOK_id := 1;
     END IF;
-    INSERT INTO Books (book_id, title, author_name, publication_date, available_book, genre, age_group, total_book)
+    INSERT INTO Books@site_link (book_id, title, author_name, publication_date, available_book, genre, age_group, total_book)
     VALUES (book_id, title, author_name, publication_date, available_book, genre, age_group, total_book);
 
     DBMS_OUTPUT.PUT_LINE('New book added successfully.');
@@ -35,5 +35,5 @@ BEGIN
 END;
 /
 
-select * from books;
+select * from books union select * from books@site_link;
 commit;

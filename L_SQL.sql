@@ -30,16 +30,19 @@ contact_details VARCHAR2(15) NOT NULL);
     PAID_FEES DECIMAL(10, 2) NULL
 );
 
-CREATE TABLE Borrowings ( borrowing_id INT PRIMARY KEY,
-book_id INT NOT NULL,
+CREATE TABLE Borrowings(
+ FOREIGN KEY (book_id) REFERENCES Books (book_id), 
+ FOREIGN KEY (member_id) REFERENCES Members (member_id), 
+ FOREIGN KEY (staff_id) REFERENCES Staff (staff_id),
+ borrowing_id INT PRIMARY KEY,
+ book_id INT NOT NULL,
  member_id INT NOT NULL,
  borrowing_date DATE NOT NULL,
  fee DECIMAL(10, 2) NOT NULL,  
  return_date DATE NOT NULL, 
  actual_return_date DATE, 
  fine DECIMAL(10, 2) NOT NULL,
- staff_id INT NOT NULL, 
- FOREIGN KEY (book_id) REFERENCES Books (book_id), 
- FOREIGN KEY (member_id) REFERENCES Members (member_id), 
- FOREIGN KEY (staff_id) REFERENCES Staff (staff_id));
+ staff_id INT NOT NULL
+ );
 commit;
+

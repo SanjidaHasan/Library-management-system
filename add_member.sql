@@ -19,12 +19,12 @@ BEGIN
     contact_details := '&contact_details';
     membership_type := '&membership_type';
 
-    SELECT MAX(member_id) + 1 INTO member_id FROM Members;
+    SELECT MAX(member_id) + 1 INTO member_id FROM Members@site_link;
     IF member_id IS NULL THEN
         member_id := 1;
     END IF;
 
-    INSERT INTO Members (member_id, name, semester, year, contact_details, membership_type, no_of_books_taken, total_fines,paid_fees)
+    INSERT INTO Members@site_link (member_id, name, semester, year, contact_details, membership_type, no_of_books_taken, total_fines,paid_fees)
     VALUES (member_id, name,semester, year, contact_details, membership_type, 0, 0,0);
 
     DBMS_OUTPUT.PUT_LINE('Member ' || name || ' added successfully. Member ID: ' || member_id);
@@ -37,5 +37,5 @@ BEGIN
 
 END;
 /
-select * from members;
+select * from members union select * from members@site_link;
 commit;

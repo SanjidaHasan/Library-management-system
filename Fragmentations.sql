@@ -1,40 +1,34 @@
 /*
-drop table Staff_Clerk;
-drop table Members_Stand;
-drop table Borrowings_Returned;
-drop table Borrowings_NotReturned;
-drop table Books_Fic;
-drop table Books_Nov;
-drop table Books_En;
-drop table Books_Mys;
-drop table Borrowings_fee;
-drop table Borrowings_fine;
-*/ 
-CREATE TABLE Staff_Clerk AS
-SELECT * FROM Staff WHERE position = 'clerk';
+drop table staff_admin;
+drop table members_prem;
+drop table books_mys;
+drop table books_en;
+drop table borrowings_notReturned;
+*/
+create table staff_admin as 
+select * from staff@site_link where position= 'Admin';
 
-CREATE TABLE Members_Stand AS
-SELECT * FROM Members WHERE membership_type = 'Standard';
+create table members_prem as 
+select * from members@site_link where membership_type= 'Premium';
 
-CREATE TABLE Members_active AS
-SELECT member_id,membership_type,no_of_books_taken,name,PAID_FEES
-FROM Members WHERE no_of_books_taken >0;
+create table members_inactive as 
+select member_id,membership_type,no_of_books_taken,name,paid_fees from members@site_link where no_of_books_taken<1;
 
-CREATE TABLE Borrowings_Returned AS
-SELECT * FROM Borrowings WHERE actual_return_date IS NOT NULL;
+create table borrowings_notReturned as 
+select * from borrowings@site_link where actual_return_date is  null;
 
-CREATE TABLE Borrowings_fee AS
-SELECT member_id,fee,borrowing_date FROM Borrowings WHERE fee<=60;
+create table books_mys AS
+select * from books@site_link where genre = 'Mystry';
 
-CREATE TABLE borrowings_fine AS
-SELECT member_id,fine,borrowing_date,return_date,actual_return_date FROM Borrowings WHERE fine<=50 AND actual_return_date is not null;
+create table books_en AS
+select * from books@site_link where genre = 'Engineering';
+drop table borrowings_fee_more;
+create table borrowings_fee_more as 
+select member_id,fee,borrowing_date from borrowings@site_link where fee>60;
 
-
-CREATE TABLE Books_Fic AS
-SELECT * FROM Books WHERE genre = 'Fiction';
-
-CREATE TABLE Books_Nov AS
-SELECT * FROM Books WHERE genre = 'Novel';
+drop table borrowings_fine_more;
+create table borrowings_fine_more as 
+select member_id,fee,borrowing_date,return_date,actual_return_date from borrowings@site_link where fine>50 AND actual_return_date is not null;
 
 
 
@@ -59,14 +53,13 @@ SELECT * FROM Books WHERE genre = 'Novel';
 
 
 
+select * from staff_admin;
+select * from members@site_link where membership_type= 'Premium';
+select * from members_inactive;
+select * from borrowings@site_link where actual_return_date is null;
 
-SELECT * FROM Staff_clerk;
-SELECT * FROM Members_Stand;
-SELECT * FROM Members_active;
-SELECT * FROM Borrowings WHERE actual_return_date IS NOT NULL;
-SELECT * FROM Books_fic;
-SELECT * FROM Books WHERE genre = 'Novel';
-select * from borrowings_fee;
-SELECT * FROM Borrowings_fine;
+select * from books@site_link where genre = 'Mystry';
+select * from books@site_link where genre = 'Engineering';
 
-commit;
+select * from borrowings_fee_more;
+select * from borrowings_fine_more;

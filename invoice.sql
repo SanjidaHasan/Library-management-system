@@ -1,7 +1,7 @@
 -- Create a procedure to generate an invoice
 CREATE OR REPLACE PROCEDURE generate_invoice(user_name_in IN VARCHAR2) IS
 BEGIN
-  FOR borrowing_row IN (SELECT * FROM Borrowings WHERE member_id IN (SELECT member_id FROM Members WHERE name = user_name_in)) LOOP
+  FOR borrowing_row IN (SELECT * FROM Borrowings@site_link WHERE member_id IN (SELECT member_id FROM Members@site_link WHERE name = user_name_in)) LOOP
     DBMS_OUTPUT.PUT_LINE('--------------INVOICE---------------');
     DBMS_OUTPUT.PUT_LINE('User Name: ' || user_name_in);
 
@@ -10,7 +10,7 @@ BEGIN
       book_title VARCHAR2(30);
       book_author VARCHAR2(30);
     BEGIN
-      SELECT title, author_name INTO book_title, book_author FROM Books WHERE book_id = borrowing_row.book_id;
+      SELECT title, author_name INTO book_title, book_author FROM Books@site_link WHERE book_id = borrowing_row.book_id;
       DBMS_OUTPUT.PUT_LINE('Book Title: ' || book_title);
       DBMS_OUTPUT.PUT_LINE('Author: ' || book_author);
     END;
@@ -27,7 +27,7 @@ BEGIN
     DECLARE
       staff_name VARCHAR2(20);
     BEGIN
-      SELECT name INTO staff_name FROM Staff WHERE staff_id = borrowing_row.staff_id;
+      SELECT name INTO staff_name FROM Staff@site_link WHERE staff_id = borrowing_row.staff_id;
       DBMS_OUTPUT.PUT_LINE('Staff Name: ' || staff_name);
     END;
 
@@ -45,6 +45,7 @@ SET VERIFY OFF;
 
 DECLARE 
   name VARCHAR2(50) := '&ENTER_USER_NAME';
+
 
 BEGIN
   generate_invoice(name);

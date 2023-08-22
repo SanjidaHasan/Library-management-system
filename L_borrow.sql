@@ -32,13 +32,15 @@ CREATE OR REPLACE PACKAGE BODY LibraryPackage AS
         paid_fees DECIMAL(10, 2);
         genre VARCHAR2(15);
         BORROW_COUNT NUMBER;
+
         max_books_allowed NUMBER(4) := 5;
 
         -- Cursor to fetch member details
         CURSOR MemberCursor IS
             SELECT membership_type, no_of_books_taken, total_fines, paid_fees
-            FROM Members
-            WHERE member_id = p_member_id;
+            FROM Members@site_link
+            WHERE member_id = p_member_id ;
+
     BEGIN
         -- Check if the member is eligible to borrow more books
         OPEN MemberCursor;
@@ -56,16 +58,15 @@ CREATE OR REPLACE PACKAGE BODY LibraryPackage AS
         END IF;
 
         -- Check if the book is already borrowed
-        SELECT COUNT(*) INTO BORROW_COUNT FROM Borrowings WHERE book_id = p_book_id AND member_id = p_member_id AND return_date IS NULL;
+        SELECT COUNT(*) INTO BORROW_COUNT FROM Borrowings@site_link WHERE book_id = p_book_id AND member_id = p_member_id AND return_date IS NULL;
         IF BORROW_COUNT = 1 THEN
             DBMS_OUTPUT.PUT_LINE('THE USER ALREADY HAS THIS BOOK.');
             RETURN;
         ELSE
-           DBMS_OUTPUT.PUT_LINE('ISSUING BOOK TO MEMBER ' || p_member_id  || '.');
-			
+            DBMS_OUTPUT.PUT_LINE('ISSUING BOOK TO MEMBER ' || p_member_id  || '.');
         END IF;
 
-        SELECT genre INTO genre FROM Books WHERE book_id = p_book_id;
+        SELECT genre INTO genre FROM Books@site_link WHERE book_id = p_book_id;
 
         IF genre = 'Fiction' THEN
             fee := 50.0; 
@@ -87,19 +88,15 @@ CREATE OR REPLACE PACKAGE BODY LibraryPackage AS
             ELSIF TO_CHAR(borrowing_date, 'MMDD') = '1216' THEN
                 -- Apply 16% discount on 16th December
                 fee := fee * 0.84;
-				--for example
-			ELSIF TO_CHAR(borrowing_date, 'MMDD') = '0822' THEN
-                -- Apply 16% discount on 16th December
-               fee := fee * 0.78;
             END IF;
         END IF;
 
-        SELECT NVL(MAX(borrowing_id), 0) + 1 INTO borrowing_id FROM Borrowings;
+        SELECT NVL(MAX(borrowing_id), 0) + 1 INTO borrowing_id FROM Borrowings@site_link;
         return_date := borrowing_date + 14; 
 
         -- Insert the borrowing record into the Borrowings table
         BEGIN
-            INSERT INTO Borrowings (borrowing_id, book_id, member_id, borrowing_date, fee, return_date, actual_return_date, fine, staff_id)
+            INSERT INTO Borrowings@site_link (borrowing_id, book_id, member_id, borrowing_date, fee, return_date, actual_return_date, fine, staff_id)
             VALUES (borrowing_id, p_book_id, p_member_id, borrowing_date, fee, return_date, actual_return_date, fine, p_staff_id);
         EXCEPTION
             WHEN OTHERS THEN
@@ -109,7 +106,7 @@ CREATE OR REPLACE PACKAGE BODY LibraryPackage AS
 
         -- Update Members table with borrowing details
         BEGIN
-            UPDATE Members
+            UPDATE Members@site_link
             SET
                 no_of_books_taken = no_of_books_taken + 1,
                 total_fines = total_fines + fine,
@@ -124,21 +121,20 @@ CREATE OR REPLACE PACKAGE BODY LibraryPackage AS
         END;
 
         BEGIN
-            UPDATE Books
+            UPDATE Books@site_link
             SET
                 available_book = available_book - 1
             WHERE book_id = p_book_id;
         END;
 
         DBMS_OUTPUT.PUT_LINE('Book borrowed successfully.');
-		--DBMS_OUTPUT.PUT_LINE('Congratulations!!You have become a premium member');
         DBMS_OUTPUT.PUT_LINE('Borrowing ID: ' || borrowing_id);
         DBMS_OUTPUT.PUT_LINE('Return Date: ' || return_date);
         DBMS_OUTPUT.PUT_LINE('Fee: ' || fee);
         DBMS_OUTPUT.PUT_LINE('Fine: ' || fine);
     EXCEPTION
         WHEN NO_DATA_FOUND THEN
-            DBMS_OUTPUT.PUT_LINE(' Book or Member not found.');
+            DBMS_OUTPUT.PUT_LINE('Member or Book not found.');
         WHEN OTHERS THEN
             DBMS_OUTPUT.PUT_LINE('Unexpected error occurred: ' || SQLERRM);
     END;
@@ -167,16 +163,16 @@ END;
 
 
 CREATE OR REPLACE TRIGGER UpdateMembershipTypeTrigger
-AFTER INSERT ON Borrowings
+AFTER INSERT ON Borrowings@site_link
 FOR EACH ROW
 DECLARE
     no_of_books_taken NUMBER(4);
 BEGIN
     SELECT no_of_books_taken INTO no_of_books_taken
-    FROM Members
+    FROM Members@site_link
     WHERE member_id = :NEW.member_id;
     IF no_of_books_taken > 3 THEN
-        UPDATE Members
+        UPDATE Members@site_link
         SET membership_type = 'Premium'
         WHERE member_id = :NEW.member_id;
     END IF;
@@ -187,5 +183,5 @@ EXCEPTION
         DBMS_OUTPUT.PUT_LINE('Unexpected error occurred: ' || SQLERRM);
 END;
 /
-select * from borrowings union select * from borrowings@site_link;
+select * from borrowings@site_link;
 commit;

@@ -1,5 +1,4 @@
 SET SERVEROUTPUT ON;
-set verify off;
 
 DECLARE
     choice NUMBER;
@@ -122,7 +121,7 @@ CREATE OR REPLACE FUNCTION MostActiveMembers RETURN SYS_REFCURSOR AS
 BEGIN
     OPEN active_members_cursor FOR
     SELECT M.member_id, M.name, M.no_of_books_taken
-    FROM Members M
+    FROM Members@site_link M
     ORDER BY M.no_of_books_taken DESC;
 
     RETURN active_members_cursor;
@@ -133,7 +132,7 @@ CREATE OR REPLACE FUNCTION BooksDueSoon RETURN SYS_REFCURSOR AS
 BEGIN
     OPEN books_due_soon_cursor FOR
     SELECT B.borrowing_id, B.book_id, B.member_id, B.return_date
-    FROM Borrowings B
+    FROM Borrowings@site_link B
     WHERE B.actual_return_date IS NULL AND B.return_date <= SYSDATE + 3;
 
     RETURN books_due_soon_cursor;
@@ -144,7 +143,7 @@ CREATE OR REPLACE FUNCTION TotalRevenue RETURN DECIMAL AS
     total_revenue DECIMAL(10, 2) := 0.0;
 BEGIN
     SELECT SUM(fine) + SUM(fee) INTO total_revenue
-    FROM Borrowings;
+    FROM Borrowings@site_link;
 
     RETURN total_revenue;
 END;
@@ -154,8 +153,8 @@ CREATE OR REPLACE FUNCTION StaffPerformanceReport RETURN SYS_REFCURSOR AS
 BEGIN
     OPEN staff_performance_cursor FOR
     SELECT S.staff_id, S.name, COUNT(*) AS books_issued
-    FROM Borrowings B
-    JOIN Staff S ON B.staff_id = S.staff_id
+    FROM Borrowings@site_link B
+    JOIN Staff@site_link S ON B.staff_id = S.staff_id
     WHERE B.actual_return_date IS NOT NULL
     GROUP BY S.staff_id, S.name
     ORDER BY books_issued DESC;
@@ -168,8 +167,8 @@ CREATE OR REPLACE FUNCTION PopularBooks RETURN SYS_REFCURSOR AS
 BEGIN
     OPEN popular_books_cursor FOR
     SELECT B.book_id, BO.title, BO.author_name, BO.genre, COUNT(*) AS borrowing_count
-    FROM Borrowings B
-    JOIN Books BO ON B.book_id = BO.book_id
+    FROM Borrowings@site_link B
+    JOIN Books@site_link BO ON B.book_id = BO.book_id
     WHERE B.actual_return_date IS NOT NULL
     GROUP BY B.book_id, BO.title, BO.author_name, BO.genre
     ORDER BY borrowing_count DESC;
@@ -182,10 +181,10 @@ CREATE OR REPLACE PROCEDURE RenewBook(p_borrowing_id IN INT) AS
     return_date DATE;
 BEGIN
     SELECT borrowing_date + 14 INTO return_date
-    FROM Borrowings
+    FROM Borrowings@site_link
     WHERE borrowing_id = p_borrowing_id;
 
-    UPDATE Borrowings
+    UPDATE Borrowings@site_link
     SET return_date = return_date + 7 -- Renew for 7 days
     WHERE borrowing_id = p_borrowing_id;
 

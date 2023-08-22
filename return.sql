@@ -13,7 +13,7 @@ BEGIN
     -- Check if the borrowing ID exists and is not returned already
     SELECT book_id, member_id, fine, fee, staff_id
     INTO p_book_id, p_member_id, p_fine, p_fee, p_staff_id
-    FROM Borrowings
+    FROM Borrowings@site_link
     WHERE borrowing_id = p_borrowing_id AND actual_return_date IS NULL;
 
     IF p_book_id IS NULL THEN
@@ -22,13 +22,13 @@ BEGIN
     END IF;
 
     -- Update the Borrowings table with actual return date
-    UPDATE Borrowings
+    UPDATE Borrowings@site_link
     SET actual_return_date = p_actual_return_date
     WHERE borrowing_id = p_borrowing_id;
 
     -- Update the Members table with the book return details
     BEGIN
-        UPDATE Members
+        UPDATE Members@site_link
         SET
             no_of_books_taken = no_of_books_taken - 1,
             total_fines = total_fines + p_fine,
@@ -36,27 +36,26 @@ BEGIN
         WHERE member_id = p_member_id;
     EXCEPTION
         WHEN OTHERS THEN
-           
-            UPDATE Borrowings
+            -- If there is an error updating Members table, undo the previous Borrowings table update
+            UPDATE Borrowings@site_link
             SET actual_return_date = NULL
             WHERE borrowing_id = p_borrowing_id;
-			
             DBMS_OUTPUT.PUT_LINE('Error occurred while updating Members table: ' || SQLERRM);
             RETURN;
     END;
 
     -- Update the Books table to increase available_book count
     BEGIN
-        UPDATE Books
+        UPDATE Books@site_link
         SET available_book = available_book + 1
         WHERE book_id = p_book_id;
     EXCEPTION
         WHEN OTHERS THEN
             -- If there is an error updating Books table, undo the previous Borrowings and Members table updates
-            UPDATE Borrowings
+            UPDATE Borrowings@site_link
             SET actual_return_date = NULL
             WHERE borrowing_id = p_borrowing_id;
-            UPDATE Members
+            UPDATE Members@site_link
             SET
                 no_of_books_taken = no_of_books_taken + 1,
                 total_fines = total_fines - p_fine,
@@ -88,5 +87,5 @@ BEGIN
 END;
 /
 
-select * from borrowings;
+ select * from borrowings@site_link;
 commit;

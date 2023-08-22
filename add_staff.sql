@@ -16,17 +16,17 @@ BEGIN
     position  :='&position';
     contact_details :='&contact_details';
     
-    SELECT MAX(staff_id) + 1 INTO staff_id FROM staff;
+    SELECT MAX(staff_id) + 1 INTO staff_id FROM staff@site_link;
     IF staff_id IS NULL THEN
         staff_id := 1;
     END IF;
-    INSERT INTO staff(staff_id, name, position, contact_details)
+    INSERT INTO staff@site_link(staff_id, name, position, contact_details)
     VALUES (staff_id, name, position, contact_details);
 
     DBMS_OUTPUT.PUT_LINE('New staff added successfully.');
 
 END;
 /
-select * from staff;
+select * from staff union select * from Staff@site_link;
 
 commit;
