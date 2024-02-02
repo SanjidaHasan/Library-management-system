@@ -1,5 +1,5 @@
 # Library Management System
-Library management system for DDS project using pl/SQL.
+Library management system for DDS project using pl/SQL. In the final project, pdf has all the demonstrations.
 This is for the server.
 
 ## Global Schema
